@@ -1,0 +1,4 @@
+- hosts:  <splunkpeers>
+tasks:
+  - name: stop splunk service
+    service: name=splunk state=stopped

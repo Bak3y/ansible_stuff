@@ -1,0 +1,4 @@
+- hosts: <splunkpeers>
+  tasks:
+  - name: start splunk service
+    service: name=splunk state=started

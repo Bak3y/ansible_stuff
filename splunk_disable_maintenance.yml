@@ -1,0 +1,4 @@
+- hosts: <splunkmasternode> 
+  tasks:
+  - name: disable maintenance mode
+    command:  /opt/splunk/bin/splunk disable maintenance-mode

@@ -1,0 +1,10 @@
+- hosts:  <splunkmasternode>
+  tasks:
+  - name: download splunk rpm from nexus
+    command:  curl -o /tmp/splunk-6.5.1-x86_64.rpm  http://nexusserver:8081/nexus/content/repositories/resources/rpm/splunk/6.5.1/splunk-6.5.1-x86_64.rpm
+  - name: upgrade splunk on master node
+    yum: name=/tmp/splunk-6.5.1-x86_64.rpm state=present
+  - name: start splunk and accept license
+    command:  /opt/splunk/bin/splunk start --accept-license --answer-yes
+  - name: enable maintenance mode
+    command:  /opt/splunk/bin/splunk enable maintenance-mode
