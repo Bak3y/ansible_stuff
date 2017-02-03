@@ -1,0 +1,39 @@
+- hosts: hostnames
+  tasks:
+  - name: copy down bootstrap.py
+    get_url: url=http://satserver.fqdn.com/pub/bootstrap.py dest=/tmp/bootstrap.py
+  - name: make bootstrap.py executable
+    file: path=/tmp/bootstrap.py mode="a+x"
+  - name: register system via bootstrap - Test RHEL 6.2
+    command: /tmp/bootstrap.py -l satadmin -p password -s satserver.fqdn.com -o "Organization" -L Location -a rhel6.2_test -g Test_RHEL6.2 --skip-puppet
+    when: ansible_distribution == 'RedHat' and ansible_distribution_version == '6.2' and "'tst' in inventory_hostname"
+  - name: register system via bootstrap - Test RHEL 6.3
+    command: /tmp/bootstrap.py -l satadmin -p password -s satserver.fqdn.com -o "Organization" -L Location -a rhel6.3_test -g Test_RHEL6.3 --skip-puppet
+    when: ansible_distribution == 'RedHat' and ansible_distribution_version == '6.3' and "'tst' in inventory_hostname"
+  - name: register system via bootstrap - Test RHEL 6.4
+    command: /tmp/bootstrap.py -l satadmin -p password -s satserver.fqdn.com -o "Organization" -L Location -a rhel6.4_test -g Test_RHEL6.4 --skip-puppet
+    when: ansible_distribution == 'RedHat' and ansible_distribution_version == '6.4' and "'tst' in inventory_hostname"
+  - name: register system via bootstrap - Test RHEL 6.5
+    command: /tmp/bootstrap.py -l satadmin -p password -s satserver.fqdn.com -o "Organization" -L Location -a rhel6.5_test -g Test_RHEL6.5 --skip-puppet
+    when: ansible_distribution == 'RedHat' and ansible_distribution_version == '6.5' and "'tst' in inventory_hostname"
+  - name: register system via bootstrap - Test RHEL 6.6
+    command: /tmp/bootstrap.py -l satadmin -p password -s satserver.fqdn.com -o "Organization" -L Location -a rhel6.6_test -g Test_RHEL6.6
+    when: ansible_distribution == 'RedHat' and ansible_distribution_version == '6.6' and "'tst' in inventory_hostname"
+  - name: register system via bootstrap - Test RHEL 6.7
+    command: /tmp/bootstrap.py -l satadmin -p password -s satserver.fqdn.com -o "Organization" -L Location -a rhel6.7_test -g Test_RHEL6.7
+    when: ansible_distribution == 'RedHat' and ansible_distribution_version == '6.7' and "'tst' in inventory_hostname"
+  - name: register system via bootstrap - Test RHEL 6.8
+    command: /tmp/bootstrap.py -l satadmin -p password -s satserver.fqdn.com -o "Organization" -L Location -a rhel6.8_test -g Test_RHEL6.8
+    when: ansible_distribution == 'RedHat' and ansible_distribution_version == '6.8' and "'tst' in inventory_hostname"
+  - name: register system via bootstrap - Test RHEL 7.0
+    command: /tmp/bootstrap.py -l satadmin -p password -s satserver.fqdn.com -o "Organization" -L Location -a rhel7.0_test -g Test_RHEL7.0
+    when: ansible_distribution == 'RedHat' and ansible_distribution_version == '7.0' and "'tst' in inventory_hostname"
+  - name: register system via bootstrap - Test RHEL 7.1
+    command: /tmp/bootstrap.py -l satadmin -p password -s satserver.fqdn.com -o "Organization" -L Location -a rhel7.1_test -g Test_RHEL7.1
+    when: ansible_distribution == 'RedHat' and ansible_distribution_version == '7.1' and "'tst' in inventory_hostname"
+  - name: register system via bootstrap - Test RHEL 7.2
+    command: /tmp/bootstrap.py -l satadmin -p password -s satserver.fqdn.com -o "Organization" -L Location -a rhel7.2_test -g Test_RHEL7.2
+    when: ansible_distribution == 'RedHat' and ansible_distribution_version == '7.2' and "'tst' in inventory_hostname"
+  - name: register system via bootstrap - Test RHEL 7.3
+    command: /tmp/bootstrap.py -l satadmin -p password -s satserver.fqdn.com -o "Organization" -L Location -a rhel7.3_test -g Test_RHEL7.3
+    when: ansible_distribution == 'RedHat' and ansible_distribution_version == '7.3' and "'tst' in inventory_hostname"
