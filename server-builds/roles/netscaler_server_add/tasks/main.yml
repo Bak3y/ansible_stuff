@@ -1,0 +1,30 @@
+- fail: msg="This role requires the vmname variable to be set"
+  when: vmname is not defined
+- fail: msg="This role requires the sat6env variable to be set"
+  when: sat6env is not defined
+- name: setup host on DTS netscaler
+  netscaler_server:
+    nitro_user: "{{nitrouser}}"
+    nitro_pass: "{{dts_pass}}"
+    nitro_protocol: https
+    nsip: 10.134.10.10
+    validate_certs: no
+    save_config: yes
+    name: "{{ vmname }}"
+    ipaddress: "{{ dataip }}"
+    state: present
+  when: sat6env != "prod"
+  delegate_to: localhost
+- name: setup host on Prod netscaler
+  netscaler_server:
+    nitro_user: "{{nitrouser}}"
+    nitro_pass: "{{prod_pass}}"
+    nitro_protocol: https
+    nsip: 10.103.4.140
+    validate_certs: no
+    save_config: yes
+    name: "{{ vmname }}"
+    ipaddress: "{{ dataip }}"
+    state: present
+  when: sat6env == "prod"
+  delegate_to: localhost

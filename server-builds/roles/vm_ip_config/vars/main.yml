@@ -1,0 +1,7 @@
+dataip: "{{ lookup('dig', vmname, 'qtype=A') }}"
+buildhostname: "{{vmname}}-build"
+buildip: "{{ lookup('dig', buildhostname, 'qtype=A') }}"
+backhostname: "{{vmname}}-nb"
+backip: "{{ lookup('dig', backhostname, 'qtype=A') }}"
+storhostname: "{{vmname}}-storage"
+storip: "{{ lookup('dig', storhostname, 'qtype=A') }}"

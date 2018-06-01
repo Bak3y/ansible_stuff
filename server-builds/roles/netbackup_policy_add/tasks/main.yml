@@ -1,0 +1,12 @@
+- fail: msg="This role requires the vmname variable to be set"
+  when: vmname is not defined
+- fail: msg="This role requires the sat6env variable to be set"
+  when: sat6env is not defined
+- name: add {{vmname}} to NetBackup
+  shell: "/usr/openv/netbackup/bin/admincmd/bpplclients Policy_Name -add {{vmname}}-nb Linux RedHat2.6.18"
+  ignore_errors: true
+  when: sat6env != "prod"
+- name: add {{vmname}} to NetBackup
+  shell: "/usr/openv/netbackup/bin/admincmd/bpplclients Policy_Name -add {{vmname}}-nb Linux RedHat2.6.18"
+  ignore_errors: true
+  when: sat6env == "prod"

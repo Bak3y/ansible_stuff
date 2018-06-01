@@ -1,0 +1,5 @@
+- name: Upgrade all packages EXCLUDING JAVA
+  yum: 
+    name: '*'
+    state: latest 
+    exclude: java*

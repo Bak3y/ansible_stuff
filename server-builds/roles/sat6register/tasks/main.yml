@@ -1,0 +1,166 @@
+- fail: msg="This role requires the sat6env variable to be set"
+  when: sat6env is not defined
+- name: remove legacy package katello-ca-consumer-prod-satellite.domain.com-1.0-3.noarch
+  yum:
+    name: katello-ca-consumer-prod-satellite.domain.com-1.0-3.noarch
+    state: absent
+- name: Get the pre-build bootstrap RPM from dev-satellite
+  yum: 
+    name: http://dev-satellite.domain.com/pub/katello-ca-consumer-latest.noarch.rpm
+    state: present
+  when: sat6env != "prod"
+- name: Get the pre-build bootstrap RPM from prod-satellite
+  yum: 
+    name: http://prod-satellite.domain.com/pub/katello-ca-consumer-latest.noarch.rpm
+    state: present
+  when: sat6env == "prod"
+- name: register with Satellite6 in dev - rhel7
+  redhat_subscription: 
+    state: present
+    org_id: Company
+    activationkey: 7Server_atl_dev 
+    force_register: yes
+    server_hostname: dev-satellite.domain.com
+    rhsm_baseurl: https://dev-satellite.domain.com/pulp/repos
+    server_insecure: yes
+  when: 
+    - sat6env == "dev"
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "7"
+    - platform != "jenkins"
+- name: register with Satellite6 in dev - rhel6
+  redhat_subscription: 
+    state: present
+    org_id: Company
+    activationkey: 6Server_atl_dev 
+    force_register: yes
+    server_hostname: dev-satellite.domain.com
+    rhsm_baseurl: https://dev-satellite.domain.com/pulp/repos
+    server_insecure: yes
+  when: 
+    - sat6env == "dev"
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "6"
+    - platform != "jenkins"
+- name: register with Satellite6 in test - rhel7
+  redhat_subscription: 
+    state: present
+    org_id: Company
+    activationkey: 7Server_atl_test 
+    force_register: yes
+    server_hostname: dev-satellite.domain.com
+    rhsm_baseurl: https://dev-satellite.domain.com/pulp/repos
+    server_insecure: yes
+  when: 
+    - sat6env == "test"
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "7"
+    - platform != "jenkins"
+- name: register with Satellite6 in test - rhel6
+  redhat_subscription: 
+    state: present
+    org_id: Company
+    activationkey: 6Server_atl_test 
+    force_register: yes
+    server_hostname: dev-satellite.domain.com
+    rhsm_baseurl: https://dev-satellite.domain.com/pulp/repos
+    server_insecure: yes
+  when: 
+    - sat6env == "test"
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "6"
+    - platform != "jenkins"
+- name: register with Satellite6 in stage - rhel7
+  redhat_subscription: 
+    state: present
+    org_id: Company
+    activationkey: 7Server_atl_stg 
+    force_register: yes
+    server_hostname: dev-satellite.domain.com
+    rhsm_baseurl: https://dev-satellite.domain.com/pulp/repos
+    server_insecure: yes
+  when: 
+    - sat6env == "stage"
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "7"
+    - platform != "jenkins"
+- name: register with Satellite6 in stage - rhel6
+  redhat_subscription: 
+    state: present
+    org_id: Company
+    activationkey: 6Server_atl_stg 
+    force_register: yes
+    server_hostname: dev-satellite.domain.com
+    rhsm_baseurl: https://dev-satellite.domain.com/pulp/repos
+    server_insecure: yes
+  when: 
+    - sat6env == "stage"
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "6"
+    - platform != "jenkins"
+- name: register with Satellite6 in prod - rhel7
+  redhat_subscription: 
+    state: present
+    org_id: Company
+    activationkey: 7Server_bhm_prod 
+    force_register: yes
+    server_hostname: prod-satellite.domain.com
+    rhsm_baseurl: https://prod-satellite.domain.com/pulp/repos
+    server_insecure: yes
+  when: 
+    - sat6env == "prod"
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "7"
+    - platform != "jenkins"
+- name: register with Satellite6 in prod - rhel6
+  redhat_subscription: 
+    state: present
+    org_id: Company
+    activationkey: 6Server_bhm_prod 
+    force_register: yes
+    server_hostname: prod-satellite.domain.com
+    rhsm_baseurl: https://prod-satellite.domain.com/pulp/repos
+    server_insecure: yes
+  when: 
+    - sat6env == "prod"
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "6"
+    - platform != "jenkins"
+- name: register with Satellite6 in test - Jenkins
+  redhat_subscription: 
+    state: present
+    org_id: Company
+    activationkey: Jenkins_test 
+    force_register: yes
+    server_hostname: dev-satellite.domain.com
+    rhsm_baseurl: https://dev-satellite.domain.com/pulp/repos
+    server_insecure: yes
+  when: 
+    - sat6env != "prod"
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "7"
+    - platform == "jenkins"
+- name: register with Satellite6 in prod - Jenkins
+  redhat_subscription: 
+    state: present
+    org_id: Company
+    activationkey: Jenkins_prod 
+    force_register: yes
+    server_hostname: prod-satellite.domain.com
+    rhsm_baseurl: https://prod-satellite.domain.com/pulp/repos
+    server_insecure: yes
+  when: 
+    - sat6env == "prod"
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "7"
+    - platform == "jenkins"
+- name: Add rhel-7-server-satellite-tools-6.3-rpms repository
+  command: subscription-manager repos --enable=rhel-7-server-satellite-tools-6.3-rpms
+  when: ansible_distribution_major_version == "7"
+- name: Add rhel-6-server-satellite-tools-6.3-rpms repository
+  command: subscription-manager repos --enable=rhel-6-server-satellite-tools-6.3-rpms
+  when: ansible_distribution_major_version == "6"
+- name: install katello-agent
+  yum:
+    name: katello-agent
+    state: present

@@ -1,0 +1,48 @@
+- fail: msg="Jenkins on RHEL7 only"
+  when: os != "rhel7"
+- name: install java and git
+  yum:
+    name: 
+    - java-1.8.0-openjdk-1.8.0.111-2.b15.el7_3.x86_64
+    - java-1.8.0-openjdk-devel-1.8.0.111-2.b15.el7_3.x86_64
+    - java-1.8.0-openjdk-headless-1.8.0.111-2.b15.el7_3.x86_64
+    - java-1.7.0-openjdk-1.7.0.95-2.6.4.0.el7_2.x86_64
+    - java-1.7.0-openjdk-devel-1.7.0.95-2.6.4.0.el7_2.x86_64
+    - git
+    state: present
+- name: create jenkins group with proper UID
+  group:
+    name: jenkins
+    gid: 991
+    state: present
+- name: create jenkins user with proper UID
+  user:
+    name: jenkins 
+    uid: 991 
+    password: $ENCODED$PASSWORD
+    createhome: yes 
+    home: /var/lib/jenkins
+    group: jenkins
+- name: setup ssh directory for jenkins
+  file:
+    path: /var/lib/jenkins/.ssh
+    owner: jenkins
+    group: jenkins
+    mode: 0700
+    state: directory
+- name: setup jenkins priv key
+  template:
+    src: ./static_files/jenkinskey_prod_rsa
+    dest: /var/lib/jenkins/.ssh/id_rsa
+    owner: jenkins
+    group: jenkins
+    mode: 0600
+  when: sat6env == "prod"
+- name: setup jenkins pub key
+  template: 
+    src: ./static_files/jenkinskey_prod_rsa.pub
+    dest: /var/lib/jenkins/.ssh/id_rsa.pub
+    owner: jenkins
+    group: jenkins
+    mode: 0600
+  when: sat6env == "prod"

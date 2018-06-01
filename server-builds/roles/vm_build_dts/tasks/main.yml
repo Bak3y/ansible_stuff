@@ -1,0 +1,146 @@
+- fail: msg="This role requires the vmname variable to be set"
+  when: vmname is not defined
+- fail: msg="This role requires the memory variable to be set"
+  when: memory is not defined
+- fail: msg="This role requires the cores variable to be set"
+  when: cores is not defined
+- fail: msg="This role requires the sockets variable to be set"
+  when: sockets is not defined
+- fail: msg="This role requires the os variable to be set"
+  when: os is not defined
+- name: check to see if VM exists
+  ovirt_vms_facts:
+    pattern: name={{ vmname }}*
+    auth:
+      username: admin@internal
+      password: password
+      url: https://dts-rhevm.domain.com/ovirt-engine/api
+      insecure: TRUE
+- fail: msg="{{ vmname }} already exists!!"
+  when: ovirt_vms
+- name: building {{ vmname }}_rhel7
+  ovirt_vms:
+    auth:
+      username: admin@internal
+      password: password
+      url: https://dts-rhevm.domain.com/ovirt-engine/api
+      insecure: TRUE
+    name: "{{ vmname }}"
+    state: stopped
+    cluster: Development_7
+    memory: "{{ memory }}GiB"
+    memory_guaranteed: "{{ memguar }}GiB"
+    cpu_cores: "{{ cores }}"
+    cpu_sockets: "{{ sockets }}"
+    type: server
+    template: rhel7basetemplatedts
+    clone: True
+    timeout: 300
+  register: builtvm7
+  when: not ovirt_vms and os == "rhel7"
+- name: building {{ vmname }}_rhel6
+  ovirt_vms:
+    auth:
+      username: admin@internal
+      password: password
+      url: https://dts-rhevm.domain.com/ovirt-engine/api
+      insecure: TRUE
+    name: "{{ vmname }}"
+    state: stopped
+    cluster: Development_7
+    memory: "{{ memory }}GiB"
+    memory_guaranteed: "{{ memguar }}GiB"
+    cpu_cores: "{{ cores }}"
+    cpu_sockets: "{{ sockets }}"
+    type: server
+    template: rhel6basetemplatedts
+    clone: True
+    timeout: 300
+  register: builtvm6
+  when: not ovirt_vms and os == "rhel6"
+- name: get existing rhel7 disk attachments from "https://dts-rhevm.domain.com{{builtvm7.vm.href}}"
+  uri:
+    user: admin@internal
+    password: password
+    url: "https://dts-rhevm.domain.com{{builtvm7.vm.href}}/diskattachments"
+    validate_certs: no
+    headers:
+      Content-Type: "application/json"
+      Accept: "application/json"
+    return_content: yes
+  register: diskattach7
+  when: not ovirt_vms and os == "rhel7"
+- name: get existing rhel6 disk attachments from "https://dts-rhevm.domain.com{{builtvm6.vm.href}}"
+  uri:
+    user: admin@internal
+    password: password
+    url: "https://dts-rhevm.domain.com{{builtvm6.vm.href}}/diskattachments"
+    validate_certs: no
+    headers:
+      Content-Type: "application/json"
+      Accept: "application/json"
+    return_content: yes
+  register: diskattach6
+  when: not ovirt_vms and os == "rhel6"
+- name: get rhel7 disk ID from "https://dts-rhevm.domain.com{{diskattach7.json.disk_attachment[0].href}}"
+  uri:
+    user: admin@internal
+    password: password
+    url: "https://dts-rhevm.domain.com{{diskattach7.json.disk_attachment[0].href}}"
+    validate_certs: no
+    return_content: yes
+  register: diskid7
+  when: not ovirt_vms and os == "rhel7"
+- name: get rhel6 disk ID from "{{diskattach6.json.disk_attachment[0].href}}"
+  uri:
+    user: admin@internal
+    password: password
+    url: "https://dts-rhevm.domain.com{{diskattach6.json.disk_attachment[0].href}}"
+    validate_certs: no
+    return_content: yes
+  register: diskid6
+  when: not ovirt_vms and os == "rhel6"
+- name: rename rhel7 disk at "{{diskid7.url}}"
+  uri:
+    user: admin@internal
+    password: password
+    url: "{{diskid7.url}}"
+    validate_certs: no
+    headers:
+      Content-Type: "application/xml"
+      Accept: "application/xml"
+    body: "<disk_attachment><disk><name>{{vmname}}-disk</name></disk></disk_attachment>"
+    method: PUT
+  when: not ovirt_vms and os == "rhel7"
+- name: rename rhel6 disk at "{{diskid6.url}}"
+  uri:
+    user: admin@internal
+    password: password
+    url: "{{diskid6.url}}"
+    validate_certs: no
+    headers:
+      Content-Type: "application/xml"
+      Accept: "application/xml"
+    body: "<disk_attachment><disk><name>{{vmname}}-disk</name></disk></disk_attachment>"
+    method: PUT
+  when: not ovirt_vms and os == "rhel6"
+- name: get VM API URL
+  shell: curl -s -k -u admin@internal:password -H 'Content-Type:application/json' -H 'Accept:application/json' "https://dts-rhevm.domain.com/ovirt-engine/api/vms?search={{vmname}}" | jq -r '.vm[0].actions.link[] | select(.rel == "start") | .href'
+  register: starturl
+- name: start VM 
+  uri:
+    user: admin@internal
+    password: password
+    url: "https://dts-rhevm.domain.com{{ starturl.stdout }}"
+    validate_certs: no
+    headers:
+      Content-Type: "application/xml"
+      Accept: "application/xml"
+    method: POST
+    body: "<action/>"
+  return_content: yes
+- name: wait for VM to start
+  wait_for:
+    host: "{{'10.131.10.253' if os == 'rhel6' else '10.131.10.254' }}"
+    port: 9022
+    timeout: 300

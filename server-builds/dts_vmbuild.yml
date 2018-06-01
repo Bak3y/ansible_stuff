@@ -1,0 +1,23 @@
+ - hosts: localhost
+   roles: 
+    - vm_build_dts
+  
+ - hosts: "{{'10.131.10.253' if os == 'rhel6' else '10.131.10.254' }}"
+   roles:
+    - vm_ip_config
+    - sat6register
+    - psacct_setup
+    - nagios_setup
+    - netscaler_server_add
+    - netbackup_client_setup
+    - update_no_java
+    - splunk_uf_install
+    - { role: jboss_server_setup, when: platform == "jboss" }
+    - { role: tomcat_server_setup, when: platform == "tomcat" }
+    - { role: jenkins, when: platform == "jenkins" }
+    - { role: drupal_setup, when: platform == "drupal_web" }
+    - server_reboot
+
+ - hosts: netbackup.domain.com
+   roles:
+    - { role: netbackup_policy_add, when: sat6env != "prod" }

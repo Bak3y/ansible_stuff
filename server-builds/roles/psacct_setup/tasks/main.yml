@@ -1,0 +1,4 @@
+- name: install psacct
+  yum: name=psacct state=latest
+- name: enable and start psacct
+  service: name=psacct state=started enabled=yes

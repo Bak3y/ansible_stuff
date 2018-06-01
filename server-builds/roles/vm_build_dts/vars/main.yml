@@ -1,0 +1,1 @@
+memguar: "{{ (memory|int / 2) | int }}"

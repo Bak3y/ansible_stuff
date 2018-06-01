@@ -1,0 +1,136 @@
+- fail: msg="JBOSS only allowed on RHEL6"
+  when: os != "rhel6"
+- name: create jbossadm group with proper UID
+  group:
+    name: jbossadm
+    gid: 1009
+    state: present
+- name: create jbossadm account with proper UID
+  user:
+    name: jbossadm 
+    uid: 1009 
+    password: $ENCODED$PASSWORD
+    createhome: yes 
+    home: /home/jbossadm
+    group: jbossadm
+- name: install java-1.8.0-openjdk-1.8.0.31-1.b13.el6_6.x86_64
+  yum:
+    name: java-1.8.0-openjdk-1.8.0.31-1.b13.el6_6.x86_64
+    state: installed
+    update_cache: yes
+- name: Set Java 1.8 as the default
+  alternatives:
+    name: java
+    path: /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.31-1.b13.el6_6.x86_64/jre/bin/java
+- name: Make sure ZIP utilities exists on the box
+  yum:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - zip
+    - unzip
+- name: Download and extract the JBOSS zip from Nexus
+  unarchive: 
+    src: http://nexus.domain.com:8081/nexus/service/local/artifact/maven/content?r=company-resources&g=com.domain.resources&a=jboss-eap-6.4.10&v=6.4.10&p=tar.gz
+    dest: /usr/share
+    remote_src: yes
+    group: jbossadm
+    owner: jbossadm
+- name: Make sure paths exist for JBOSS install
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0777
+    owner: jbossadm
+    group: jbossadm
+  with_items:
+    - /usr/jboss
+    - /usr/jboss/logs
+    - /usr/jboss/pids
+    - /usr/jboss/profiles
+    - /usr/jboss/properties
+    - /usr/jboss/storage
+    - /usr/jboss/certificates
+- name: get admin scripts for JBOSS
+  copy:
+    src: /var/lib/jenkins/workspace/DTS-Server-Build/JBoss_EAP_6.4_Automation/administrative_scripts/prod/{{item}}
+    dest: /root/{{item}}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - find_jboss_ports_in_use.sh
+    - setup_appdynamics_instance.sh
+- name: get deploy scripts for JBOSS
+  copy:
+    src: /var/lib/jenkins/workspace/DTS-Server-Build/JBoss_EAP_6.4_Automation/deploy_scripts/prod/deploy.sh
+    dest: /home/jbossadm/deploy.sh
+    owner: jbossadm
+    group: jbossadm
+    mode: 0755
+- name: get java keystore
+  copy: 
+    src: /var/lib/jenkins/workspace/DTS-Server-Build/JBoss_EAP_6.4_Instance_Setup/keystore/.keystore
+    dest: /home/jbossadm/.keystore
+    owner: jbossadm
+    group: jbossadm
+    mode: 0600
+- name: set up log rotate cron job
+  cron:
+    name: "rotate JBOSS logs"
+    minute: 0
+    hour: 2
+    job: 'find /usr/jboss/logs -type f -mtime +7 -exec rm {} \;'
+    user: root
+- name: set jbossadm in sudoers
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    line: 'Defaults:jbossadm !requiretty'
+    validate: '/usr/sbin/visudo -cf %s'
+- name: jbossadm nopasswd in sudoers
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    line: 'jbossadm  ALL=(ALL)       NOPASSWD:ALL'
+    validate: '/usr/sbin/visudo -cf %s'
+- name: set soft nofile ulimits for all users
+  pam_limits:
+    domain: '*'
+    limit_type: soft
+    limit_item: nofile
+    value: 65536
+- name: set hard nofile ulimits for all users
+  pam_limits:
+    domain: '*'
+    limit_type: hard
+    limit_item: nofile
+    value: 65536
+- name: set soft nproc ulimits for all users
+  pam_limits:
+    domain: '*'
+    limit_type: soft
+    limit_item: nproc
+    value: 16384
+- name: set hard nproc ulimits for all users
+  pam_limits:
+    domain: '*'
+    limit_type: hard
+    limit_item: nproc
+    value: 16384
+- name: set soft core ulimits for all users
+  pam_limits:
+    domain: '*'
+    limit_type: soft
+    limit_item: core
+    value: unlimited
+- name: remove 90-nproc.conf
+  file:
+    path: /etc/security/limits.d/90-nproc.conf
+    state: absent
+- name: Create Ansible Directory
+  file: 
+    path: /etc/ansible/facts.d
+    state: directory 
+    owner: ansible
+    mode: 755

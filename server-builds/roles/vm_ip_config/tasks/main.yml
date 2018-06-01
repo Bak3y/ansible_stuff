@@ -1,0 +1,48 @@
+- fail: msg="This role requires the vmname variable to be set"
+  when: vmname is not defined
+- fail: msg="This role requires the sat6env variable to be set"
+  when: sat6env is not defined
+- name: Wait for DTS rhel6 server to finish building
+  wait_for: 
+    host: 10.131.10.253 
+    port: 9022
+    timeout: 600
+  when: os == "rhel6" and sat6env != "prod"
+- name: Wait for DTS rhel7 server to finish building
+  wait_for: 
+    host: 10.131.10.254 
+    port: 9022
+    timeout: 600
+  when: os == "rhel7" and sat6env != "prod"
+- name: Wait for Prod rhel6 server to finish building
+  wait_for: 
+    host: 10.103.100.254 
+    port: 9022
+    timeout: 600
+  when: os == "rhel6" and sat6env == "prod"
+- name: Wait for Prod rhel7 server to finish building
+  wait_for: 
+    host: 10.103.10.254 
+    port: 9022
+    timeout: 600
+  when: os == "rhel7" and sat6env == "prod"
+- name: Add {{dataip}} to ifcfg-eth0 file for DTS rhel6
+  lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth0 line='IPADDR={{dataip}}' regexp="^IPADDR=10.131.10.253"
+  when: os == "rhel6" and sat6env != "prod"
+- name: Add {{dataip}} to ifcfg-eth0 file for Prod rhel6
+  lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth0 line='IPADDR={{dataip}}' regexp="^IPADDR=10.103.100.254"
+  when: os == "rhel6" and sat6env == "prod"
+- name: Add {{dataip}} to ifcfg-eth0 file for DTS rhel7
+  lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth0 line='IPADDR={{dataip}}' regexp="^IPADDR=10.131.10.254"
+  when: os == "rhel7" and sat6env != "prod"
+- name: Add {{dataip}} to ifcfg-eth0 file for Prod rhel7
+  lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth0 line='IPADDR={{dataip}}' regexp="^IPADDR=10.103.10.254"
+  when: os == "rhel7" and sat6env == "prod"
+- name: Add {{buildip}} to ifcfg-eth1 file
+  lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth1 line='IPADDR={{buildip}}' insertbefore="^NETMASK"
+- name: Add {{backip}} to ifcfg-eth2 file
+  lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth2 line='IPADDR={{backip}}' insertbefore="^NETMASK"
+- name: Add {{storip}} to ifcfg-eth3 file
+  lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth3 line='IPADDR={{storip}}' insertbefore="^NETMASK"
+- name: Set system hostname correctly
+  hostname: name="{{ vmname }}.domain.com"

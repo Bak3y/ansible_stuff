@@ -1,0 +1,2 @@
+buildhostname: "{{vmname}}-build"
+buildip: "{{ lookup('dig', buildhostname, 'qtype=A') }}"

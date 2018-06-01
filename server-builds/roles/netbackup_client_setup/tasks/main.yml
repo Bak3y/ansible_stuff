@@ -1,0 +1,2 @@
+- name: Set up CLIENT_NAME in bp.conf for NetBackup
+  lineinfile: dest=/usr/openv/netbackup/bp.conf line="CLIENT_NAME = {{ backhostname }}" regexp="^CLIENT_NAME"

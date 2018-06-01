@@ -1,0 +1,16 @@
+- name: copy splunk installer from nexus
+  get_url: 
+    url: http://nexus.domain.com:8081/nexus/content/repositories/company-resources/com/domain/rpm/splunkforwarder/6.6.0-1/splunkforwarder-6.6.0-1-x86_64.rpm
+    dest: /tmp/splunkforwarder-6.6.0-1-x86_64.rpm
+- name: install splunk forwarder from RPM
+  yum: name=/tmp/splunkforwarder-6.6.0-1-x86_64.rpm state=present
+- name: setup deploymentclient.conf
+  template: src=static_files/deploymentclient_test.conf dest=/opt/splunkforwarder/etc/system/local/deploymentclient.conf
+- name: splunk start and accept license
+  command: /opt/splunkforwarder/bin/splunk enable boot-start --accept-license  --answer-yes --no-prompt
+- name: stop splunk
+  service: name=splunk state=stopped
+- name: clear config
+  command: /opt/splunkforwarder/bin/splunk clone-prep-clear-config
+- name: start splunk service
+  service: name=splunk state=started

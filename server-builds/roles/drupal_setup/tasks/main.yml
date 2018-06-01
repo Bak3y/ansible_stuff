@@ -1,0 +1,94 @@
+- name: make sure correct repos are enabled
+  shell: subscription-manager repos --enable=rhel-server-rhscl-7-rpms
+- name: install all prerequisite packages
+  yum:
+    state: present
+    name:
+      - httpd24-httpd-2.4.27-8.el7.x86_64
+      - httpd24-httpd-tools-2.4.27-8.el7.x86_64
+      - httpd24-1.1-18.el7.x86_64
+      - httpd24-runtime-1.1-18.el7.x86_64
+      - httpd24-libnghttp2-1.7.1-6.el7.x86_64
+      - httpd24-mod_ssl-2.4.27-8.el7.x86_64
+      - rh-php71-php-common-7.1.8-1.el7.x86_64
+      - rh-php71-php-pear-1.10.4-1.el7.noarch
+      - rh-php71-php-pdo-7.1.8-1.el7.x86_64
+      - rh-php71-php-gd-7.1.8-1.el7.x86_64
+      - rh-php71-php-opcache-7.1.8-1.el7.x86_64
+      - rh-php71-runtime-1-1.el7.x86_64
+      - rh-php71-php-cli-7.1.8-1.el7.x86_64
+      - rh-php71-1-1.el7.x86_64
+      - rh-php71-php-mysqlnd-7.1.8-1.el7.x86_64
+      - rh-php71-php-7.1.8-1.el7.x86_64
+      - rh-php71-php-zip-7.1.8-1.el7.x86_64
+      - rh-php71-php-process-7.1.8-1.el7.x86_64
+      - rh-php71-php-mbstring-7.1.8-1.el7.x86_64
+      - rh-php71-php-json-7.1.8-1.el7.x86_64
+      - rh-php71-php-xml-7.1.8-1.el7.x86_64
+      - rh-php71-php-fpm-7.1.8-1.el7.x86_64
+- name: create drupal dir
+  file:
+    path: /home/ansible/drupal
+    state: directory
+- name: move httpd.conf to correct location
+  template: 
+    src: static_files/drupal_httpd.conf
+    dest: /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
+    mode: 0644
+    owner: apache
+    group: apache
+- name: move php.ini to correct location
+  template:
+    src: static_files/drupal_php.ini
+    dest: /etc/opt/rh/rh-php71/php.ini
+    mode: 0644
+    owner: apache
+    group: apache
+- name: change login rights for apache
+  user:
+    name: apache
+    shell: /bin/bash
+- name: setup authorized key for apache
+  authorized_key:
+    user: apache
+    state: present
+    key: '{{ item }}'
+  with_file:
+    - static_files/jenkins_ssh_key_dts
+- name: set httpd24-httpd to run at boot
+  systemd:
+    name: httpd24-httpd
+    state: restarted
+    enabled: True
+- name: /var/www is a symlink to /opt/rh/httpd24/root/var/www
+  file:
+    src: /opt/rh/httpd24/root/var/www
+    dest: /var/www
+    state: link
+    force: yes
+- name: /bin/php is a symlink to /opt/rh/rh-php71/root/usr/bin/php
+  file:
+    src: /opt/rh/rh-php71/root/usr/bin/php
+    dest: /bin/php
+    state: link
+    force: yes
+- name: fix permissions for /var/www
+  file:
+    path: /var/www
+    state: directory
+    owner: apache
+    group: apache
+    recurse: yes
+    mode: 0755
+- name: open http
+  firewalld:
+    service: http
+    permanent: true
+    state: enabled
+    immediate: yes
+- name: open https
+  firewalld:
+    service: https
+    permanent: true
+    state: enabled
+    immediate: yes

@@ -1,0 +1,81 @@
+properties([
+    parameters([
+        string(
+            name: 'new_server',
+            defaultValue: '',
+            description: 'Server name.  Example: prodserver-a'),
+        choice(
+            choices: 'prod',
+            description: 'Envrionment', 
+            name: 'environment'),
+        choice(
+            choices: '2\n4\n8', 
+            description: 'Number of cores', 
+            name: 'cores'),
+        choice(
+            choices: '1\n2', 
+            description: 'Number of sockets', 
+            name: 'sockets'),
+        choice(
+            choices: '4\n8\n12\n16', 
+            description: 'Amount of RAM in GB', 
+            name: 'GBRam'),
+        choice(
+            choices: 'base\njboss\ntomcat\njenkins\nmysql', 
+            description: 'Platform type', 
+            name: 'Platform'),
+        choice(
+            choices: 'rhel6\nrhel7', 
+            description: 'os type', 
+            name: 'os')
+    ]),
+    disableConcurrentBuilds(),
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+])
+
+node {
+    stage ('Get updated Inventory') {
+      dir('Inventory') {
+        git url: 'git@git.domain.com:InfrastructureRestricted/Inventory.git'
+      }
+    }
+    stage ('Get updated server build repo') {
+      dir('server-builds') {
+        git url: 'git@git.domain.com:server-builds.git'
+      }
+    }
+    stage ('Get updated ASE JBOSS automation repo') {
+      dir('JBoss_EAP_6.4_Automation') {
+        git url: 'git@git.domain.com:JBoss_EAP_6.4_Automation.git'
+      }
+    }
+    stage ('Get updated ASE JBOSS instance setup repo') {
+      dir('JBoss_EAP_6.4_Instance_Setup') {
+        git url: 'git@git.domain.com:JBoss_EAP_6.4_Instance_Setup.git'
+      }
+    }
+    stage ('Deploy Server') {
+      ansiblePlaybook(
+          playbook: './server-builds/prod_vmbuild.yml',
+          inventory: './Inventory/prodservers',
+          extraVars: [
+              vmname: "${params.new_server}",
+              memory: "${params.GBRam}",
+              cores: "${params.cores}",
+              sockets: "${params.sockets}",
+              os: "${params.os}",
+              sat6env: "${params.environment}",
+              platform: "${params.Platform}"
+          ]
+      )
+    }
+    stage ('Update Ansible Inventory') {
+        build job: 'AnsibleInventoryUpdate',
+            parameters: [
+                string(name: 'environment', value: String.valueOf("${params.environment}")),
+                string(name: 'new_server', value: String.valueOf("${params.new_server}")),
+                string(name: 'Platform', value: String.valueOf("${params.Platform}")),
+                string(name: 'os', value: String.valueOf("${params.os}"))
+            ]
+    }
+}

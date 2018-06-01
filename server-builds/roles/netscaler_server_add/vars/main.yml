@@ -1,0 +1,4 @@
+dataip: "{{ lookup('dig', vmname, 'qtype=A') }}"
+nitrouser: apiadd
+dts_pass: $dts_password
+prod_pass: $prod_password

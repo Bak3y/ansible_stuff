@@ -1,0 +1,2 @@
+backhostname: "{{vmname}}-nb"
+backip: "{{ lookup('dig', backhostname, 'qtype=A') }}"
